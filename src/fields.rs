@@ -1,17 +1,18 @@
-use std::io::Read;
+use crate::colors;
+use regex::{Captures, Regex};
 use std::env;
 use std::fs;
-use regex::{Regex, Captures};
-use crate::colors;
+use std::io::Read;
 
 fn format_data(key: &str, value: &str) -> String {
-    format!("{color}▪{bold} {key:7}{reset} {value}",
-            key = key,
-            value = value,
-            color = colors::green,
-            bold = colors::bold,
-            reset = colors::reset,
-            )
+    format!(
+        "{color}▪{bold} {key:7}{reset} {value}",
+        key = key,
+        value = value,
+        color = colors::green,
+        bold = colors::bold,
+        reset = colors::reset,
+    )
 }
 
 // Search with Regex in a string and return all of the matches
@@ -34,9 +35,11 @@ pub fn get_user_host_name(is_christmas: bool) -> Result<(String, String), String
 
     // Hostname
     let mut buf = [0u8; 128];
-    let hostname_cstr = nix::unistd::gethostname(&mut buf)
-        .map_err(|_| "Failed getting hostname".to_owned())?;
-    let hostname = hostname_cstr.to_str().map_err(|_| "Failed decoding hostname")?;
+    let hostname_cstr =
+        nix::unistd::gethostname(&mut buf).map_err(|_| "Failed getting hostname".to_owned())?;
+    let hostname = hostname_cstr
+        .to_str()
+        .map_err(|_| "Failed decoding hostname")?;
 
     // Combine username and hostname into a formatted string
     let main_color: &str;
@@ -47,14 +50,17 @@ pub fn get_user_host_name(is_christmas: bool) -> Result<(String, String), String
         main_color = colors::green;
     }
 
-    let user_host_name = format!("{color}{bold}{user}{reset}
+    let user_host_name = format!(
+        "{color}{bold}{user}{reset}
                                  {bold}@{color}{host}{reset}",
-                                 user = username,
-                                 host = hostname,
-                                 color = main_color,
-                                 bold = colors::bold,
-                                 reset = colors::reset,
-                                 ).replace(" ", "").replace("\n", "");
+        user = username,
+        host = hostname,
+        color = main_color,
+        bold = colors::bold,
+        reset = colors::reset,
+    )
+    .replace(" ", "")
+    .replace("\n", "");
 
     // Separator
     // format: username length + @ (1) + hostname length
@@ -87,25 +93,28 @@ pub fn get_distro_name() -> Result<String, String> {
         let mut lsb_release = lsb_release.unwrap();
         let result = lsb_release.read_to_string(&mut buffer);
 
-        if result.is_err() { return Err("error".to_string()); }
+        if result.is_err() {
+            return Err("error".to_string());
+        }
 
         // Match regex in buffer
-        let re_lsb = match_regex(&buffer,
-                                 r#"(?x)
+        let re_lsb = match_regex(
+            &buffer,
+            r#"(?x)
                                  DISTRIB_DESCRIPTION=
                                  "?   # Quotes if description is multiple words
                                  (?P<distro_name>[^\n"]+)
                                  "?   # Ditto
                                  \n
-                                 "#.to_string());
+                                 "#
+            .to_string(),
+        );
 
         // Check if regex matches
         if let Some(..) = re_lsb {
             let re_lsb = re_lsb.unwrap();
 
-            let distro_name = re_lsb.name("distro_name")
-                .unwrap()
-                .as_str();
+            let distro_name = re_lsb.name("distro_name").unwrap().as_str();
             return Ok(format_data("os", distro_name));
         }
     }
@@ -120,23 +129,26 @@ pub fn get_distro_name() -> Result<String, String> {
     let mut os_release = os_release.unwrap();
     let result = os_release.read_to_string(&mut buffer);
 
-    if result.is_err() { return Err("error".to_string()); }
+    if result.is_err() {
+        return Err("error".to_string());
+    }
 
-    let re_os = match_regex(&buffer,
-                            r#"(?x)
+    let re_os = match_regex(
+        &buffer,
+        r#"(?x)
                             PRETTY_NAME=
                             "?   # Quotes if description is multiple words
                             (?P<distro_name>[^\n"]+)
                             "?   # Ditto
                             \n
-                            "#.to_string());
+                            "#
+        .to_string(),
+    );
 
     if let Some(..) = re_os {
         let re_os = re_os.unwrap();
 
-        let distro_name = re_os.name("distro_name")
-            .unwrap()
-            .as_str();
+        let distro_name = re_os.name("distro_name").unwrap().as_str();
         return Ok(format_data("os", distro_name));
     }
 
@@ -148,10 +160,16 @@ pub fn get_kernel(show_kern_name: bool) -> Result<String, String> {
     Ok(format_data(
         "kernel",
         &if show_kern_name {
-            format!("{}/{} {}", uname.sysname(), uname.machine(), uname.release())
+            format!(
+                "{}/{} {}",
+                uname.sysname(),
+                uname.machine(),
+                uname.release()
+            )
         } else {
             format!("{} {}", uname.release(), uname.machine())
-        }))
+        },
+    ))
 }
 
 pub fn get_shell() -> Result<String, String> {
@@ -163,10 +181,13 @@ pub fn get_shell() -> Result<String, String> {
 
     let shell = shell_env.unwrap().into_string().unwrap();
 
-    let re_shell = match_regex(&shell,
-                               r#"(?x)
+    let re_shell = match_regex(
+        &shell,
+        r#"(?x)
                                (?P<shell_name>[^/]+)$
-                               "#.to_string());
+                               "#
+        .to_string(),
+    );
 
     if re_shell.is_none() {
         return Err("Error".to_string());
@@ -187,24 +208,33 @@ pub fn format_uptime(time: std::time::Duration) -> String {
 
     format_data(
         "uptime",
-        &format!("{hours}h {minutes}m",
-                 hours = uptime_hours,
-                 minutes = uptime_minutes))
+        &format!(
+            "{hours}h {minutes}m",
+            hours = uptime_hours,
+            minutes = uptime_minutes
+        ),
+    )
 }
 
 pub fn format_memory(mem: systemstat::Memory) -> String {
     format_data(
         "memory",
-        &format!("{used} / {total}",
-                 used = systemstat::saturating_sub_bytes(mem.total, mem.free),
-                 total = mem.total))
+        &format!(
+            "{used} / {total}",
+            used = systemstat::saturating_sub_bytes(mem.total, mem.free),
+            total = mem.total
+        ),
+    )
 }
 
 pub fn format_battery(battery: systemstat::BatteryLife) -> String {
     format_data(
         "battery",
-        &format!("{percent}%, {hours}h {minutes}m remaining",
-                 percent = battery.remaining_capacity * 100.0,
-                 hours = battery.remaining_time.as_secs() / 3600,
-                 minutes = battery.remaining_time.as_secs() % 60))
+        &format!(
+            "{percent}%, {hours}h {minutes}m remaining",
+            percent = format!("{:.0}", battery.remaining_capacity * 100.0),
+            hours = battery.remaining_time.as_secs() / 3600,
+            minutes = battery.remaining_time.as_secs() % 60
+        ),
+    )
 }

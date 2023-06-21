@@ -6,7 +6,6 @@ mod fields;
 
 // Simple system fetch tool written in Rust.
 fn main() {
-
     let args: Vec<String> = env::args().collect();
     let mut show_kern_name = false;
     let mut is_christmas = false;
@@ -29,14 +28,11 @@ fn main() {
 
     // Skip first arg as that is the program command
     for arg in &args[1..] {
-
         // Convert to string slice for the comparisons
         let arg = &arg[..];
 
         match arg {
-            "--help" | "-h" => {
-                help_message()
-            }
+            "--help" | "-h" => help_message(),
 
             "--bonsai" | "-b" => {
                 ascii_tree = format!(
@@ -102,10 +98,9 @@ fn main() {
     let mut data_list: Vec<String> = Vec::new();
 
     if let Ok(value) = fields::get_user_host_name(is_christmas) {
-            data_list.push(value.0);
-            data_list.push(value.1);
+        data_list.push(value.0);
+        data_list.push(value.1);
     };
-
 
     if let Ok(value) = fields::get_distro_name() {
         data_list.push(value);
@@ -145,25 +140,26 @@ fn main() {
 }
 
 // Print two vectors of strings side to side
-fn print_left_to_right(left: Vec<String>, right: Vec<String>,
-                       is_christmas: bool) {
+fn print_left_to_right(left: Vec<String>, right: Vec<String>, is_christmas: bool) {
     let left_len = left.len();
     let right_len = right.len();
-    let max_len = if left_len > right_len {left_len} else {right_len};
+    let max_len = if left_len > right_len {
+        left_len
+    } else {
+        right_len
+    };
 
     for i in 0..max_len {
         if i < left_len {
             print!("{}", left[i]);
         }
         if i < right_len {
-
             // Red square if Christmas mode
             if is_christmas {
-                print!("{}", right[i]
-                       .replace("▪",
-                                &format!("{}▪{}",
-                                         colors::red,
-                                         colors::green)));
+                print!(
+                    "{}",
+                    right[i].replace("▪", &format!("{}▪{}", colors::red, colors::green))
+                );
             } else {
                 print!("{}", right[i]);
             }
@@ -194,11 +190,12 @@ fn split_by_newline(ascii_art: String) -> Vec<String> {
 fn help_message() {
     let version = env!("CARGO_PKG_VERSION");
     println!("Usage:");
-    println!("  {bold}{green}treefetch{reset} [options]",
-            green = colors::green,
-            reset = colors::reset,
-            bold = colors::bold,
-            );
+    println!(
+        "  {bold}{green}treefetch{reset} [options]",
+        green = colors::green,
+        reset = colors::reset,
+        bold = colors::bold,
+    );
     println!();
     println!("OPTIONS");
     println!("  -b, --bonsai   Show a bonsai tree");
